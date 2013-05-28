@@ -1,20 +1,23 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
-<title>Services Dashboard-Tag</title>
+<title>Services Dashboard-Tag-FrontEnd</title>
+<p><b> Developed By:- Girish Dudhwal #Tech Ops &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<font color = "FFCC00">Normal Value&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color = "FF9900">Alert Value&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color = "FF0000">Warning Value&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font></b></p>
+<p><i> The More quieter you are , More you be able to hear </i></p>
+
 <style>
 
 @import url(bootstrap.css);
 @import url(style.css);
 
 body {
-  padding-top: 30px; /* 60px to make the container go all the way to the bottom of the topbar */
+  padding-top: 50px; /* 60px to make the container go all the way to the bottom of the topbar */
 }
 
 </style>
 <body>
    <div class="navbar navbar-fixed-top">
       <div class="navbar-inner">
-        Graphite Metrics
+        Services Dashboard-Tag
       </div>
     </div>
 
@@ -23,37 +26,37 @@ body {
 <script>
 
 var context = cubism.context()
-    .serverDelay(15) // allow 15 seconds of collection lag
+    .serverDelay(10) // allow 15 seconds of collection lag
+//    .clientDelay(10)
     .step(1 * 60 * 1000) // fifteen seconds per value
-    .size(2160); // fetch 1440 values (720p)
+    .size(1440); // fetch 1440 values (720p)
 var graphite = context.graphite("http://graphite1.pv.sv.nextag.com:8080");
-
 var matrics_median = [
-graphite.metric("averageSeries(keepLastValue(stats.timers.Clients.Services.PS.CN.lu*.tag.GetById.median))").alias("SVS-Tag read latency - median"),
-//graphite.metric("keepLastValue(averageSeries(transformNull(stats.timers.Clients.Services.PS.CN.lu*.tag.GetById.median,0)))").alias("SVS-Tag read latency - median"),
-graphite.metric("keepLastValue(averageSeries(transformNull(stats.timers.Clients.Services.PS.AT.atlu*.tag.GetById.median,0)))").alias("ATL-Tag read latency - median"),
-graphite.metric("keepLastValue(averageSeries(transformNull(stats.timers.Clients.Services.PS.SD.sdlu*.tag.GetById.median,0)))").alias("SDX-Tag read latency - median"),
+graphite.metric("movingAverage(averageSeries(transformNull(stats.timers.Clients.Services.PS.CN.lu*.tag.GetById.median,0)),10)").alias("SVS-Tag read latency - median").summarize("avg"),
+graphite.metric("movingAverage(averageSeries(keepLastValue(stats.timers.Clients.Services.PS.AT.atlu*.tag.GetById.median)),10)").alias("ATL-Tag read latency - median").summarize("avg"),
+graphite.metric("movingAverage(averageSeries(keepLastValue(stats.timers.Clients.Services.PS.SD.sdlu*.tag.GetById.median)),10)").alias("SDX-Tag read latency - median").summarize("avg"),
 ];
 
 var matrics_95th = [
-graphite.metric("averageSeries(keepLastValue(stats.timers.Clients.Services.PS.CN.lu*.tag.GetById.mean_95))").alias("SVS-Tag read latency - mean 95th"),
- graphite.metric("keepLastValue(averageSeries(transformNull(stats.timers.Clients.Services.PS.AT.atlu*.tag.GetById.mean_95,0)))").alias("ATL-Tag read latency - mean 95th"),
- graphite.metric("keepLastValue(averageSeries(transformNull(stats.timers.Clients.Services.PS.SD.sdlu*.tag.GetById.mean_95,0)))").alias("SDX-Tag read latency - mean 95th"),
-//graphite.metric("keepLastValue(averageSeries(transformNull(stats.timers.Clients.Services.PS.CN.lu*.tag.GetById.mean_99,0)))").alias("SVS-Tag read latency - mean 99th"),
+graphite.metric("movingAverage(averageSeries(transformNull(stats.timers.Clients.Services.PS.CN.lu*.tag.GetById.upper_95,0)),10)").alias("SVS-Tag read latency - mean 95th").summarize("avg"),
+graphite.metric("movingAverage(averageSeries(keepLastValue(stats.timers.Clients.Services.PS.AT.atlu*.tag.GetById.upper_95)),10)").alias("ATL-Tag read latency - mean 95th").summarize("avg"),
+graphite.metric("movingAverage(averageSeries(keepLastValue(stats.timers.Clients.Services.PS.SD.sdlu*.tag.GetById.upper_95)),10)").alias("SDX-Tag read latency - mean 95th").summarize("avg"),
+
 ];
 
 var matrics_99th = [
-graphite.metric("averageSeries(keepLastValue(stats.timers.Clients.Services.PS.CN.lu*.tag.GetById.mean_99))").alias("SVS-Tag read latency - mean 99th"),
- graphite.metric("keepLastValue(averageSeries(transformNull(stats.timers.Clients.Services.PS.AT.atlu*.tag.GetById.mean_99,0)))").alias("ATL-Tag read latency - mean 99th"),
- graphite.metric("keepLastValue(averageSeries(transformNull(stats.timers.Clients.Services.PS.SD.sdlu*.tag.GetById.mean_99,0)))").alias("SDX-Tag read latency - mean 99th"),
+
+graphite.metric("movingAverage(averageSeries(keepLastValue(stats.timers.Clients.Services.PS.CN.lu*.tag.GetById.upper_99)),10)").alias("SVS-Tag read latency - mean 99th").summarize("avg"),
+graphite.metric("movingAverage(averageSeries(keepLastValue(stats.timers.Clients.Services.PS.AT.atlu*.tag.GetById.upper_99)),10)").alias("ATL-Tag read latency - mean 99th").summarize("avg"),
+graphite.metric("movingAverage(averageSeries(keepLastValue(stats.timers.Clients.Services.PS.SD.sdlu*.tag.GetById.upper_99)),10)").alias("SDX-Tag read latency - mean 99th").summarize("avg"),
+
 ];
 
 var matrics_sum = [
-graphite.metric("keepLastValue(averageSeries(transformNull(stats_counts.Clients.Services.PS.CN.lu*.tag.GetById*,0)))").alias("SVS-Tag Cache Misses - sum"),
-graphite.metric("keepLastValue(averageSeries(transformNull(stats_counts.Clients.Services.PS.AT.atlu*.tag.GetById*,0)))").alias("ATL-Tag Cache Misses - sum"),
- graphite.metric("keepLastValue(averageSeries(transformNull(stats_counts.Clients.Services.PS.SD.sdlu*.tag.GetById*,0)))").alias("SDX-Tag Cache Misses - sum"),
+graphite.metric("movingAverage(averageSeries(keepLastValue(stats_counts.Clients.Services.PS.CN.lu*.tag.GetById*)),10)").alias("SVS-Tag Cache Misses - sum").summarize("sum"),
+graphite.metric("movingAverage(averageSeries(keepLastValue(stats_counts.Clients.Services.PS.AT.atlu*.tag.GetById*)),10)").alias("ATL-Tag Cache Misses - sum").summarize("sum"),
+ graphite.metric("movingAverage(averageSeries(keepLastValue(stats_counts.Clients.Services.PS.SD.sdlu*.tag.GetById*,0)),10)").alias("SDX-Tag Cache Misses - sum"),
 ];
-
 
 
 //var horizon = context.horizon().colors(["#08519c", "#*82bd", "#6baed6", "#fee6ce", "#fdae6b", "#e6550d" ]);
@@ -68,7 +71,7 @@ d3.select("body").selectAll(".axis")
     .data(["top", "bottom"])
   .enter().append("div").attr("class", "fluid-row")
     .attr("class", function(d) { return d + " axis"; })
-    .each(function(d) { d3.select(this).call(context.axis().ticks(12).orient(d)); });
+    .each(function(d) { d3.select(this).call(context.axis().ticks(24).orient(d)); });
 
 d3.select("body").append("div")
     .attr("class", "rule")
@@ -77,23 +80,22 @@ d3.select("body").append("div")
 d3.select("body").selectAll(".horizon")
     .data(matrics_median)
   .enter().insert("div", ".bottom")
-    .attr("class", "horizon").call(horizon.extent([-70, 90]).colors(["#08519c", "#*82bd", "#6baed6","#bae4b3","#74c476","#006d2c","#f20510","#da8e92" ]).mode(["mirror"]));
-console.log(horizon.format())
+    .attr("class", "horizon").call(horizon.extent([-10, 60]).colors(["#08519c", "#*82bd", "#6baed6","#FFCC00","#FF9900","#FF0000"]).mode(["offset"]));//.colors(["#08519c", "#*82bd", "#6baed6","#F1B8AB","#F27145","#DD0505"]).mode(["offset"]));//.colors(["#08519c", "#*82bd", "#6baed6","#F28C6A","#F27145","#F1460D"]).mode(["offset"]));//colors(["#08519c", "#*82bd", "#6baed6","#bae4b3","#74c476","#006d2c","#f20510","#da8e92" ]).mode(["offset"]));
 
 d3.select("body").selectAll(".horizon1")
     .data(matrics_95th)
   .enter().insert("div", ".bottom")
-    .attr("class", "horizon").call(horizon1.extent([-10, 120]).colors(["#08519c", "#*82bd", "#6baed6","#bae4b3","#74c476","#006d2c","#f20510","#da8e92" ]));
+    .attr("class", "horizon").call(horizon1.extent([-200, 60]).colors(["#08519c", "#*82bd", "#6baed6","#FFCC00","#FF9900","#FF0000"]).mode(["offset"]));//.colors(["#08519c", "#*82bd", "#6baed6","#bae4b3","#74c476","#006d2c","#f20510","#da8e92" ]).mode(["mirror"]));
 
 d3.select("body").selectAll(".horizon4")
-    .data(matrics_99th)
-  .enter().insert("div", ".bottom")
-    .attr("class", "horizon").call(horizon4.extent([-70, 180]).colors(["#08519c", "#*82bd", "#6baed6","#bae4b3","#74c476","#006d2c","#f20510","#da8e92" ]));
-
-d3.select("body").selectAll(".horizon3")
     .data(matrics_sum)
   .enter().insert("div", ".bottom")
-    .attr("class", "horizon").call(horizon3.extent([-70, 180]).colors(["#08519c", "#*82bd", "#6baed6","#bae4b3","#74c476","#006d2c","#f20510","#da8e92" ]));
+    .attr("class", "horizon").call(horizon4.extent([-10, 60]).colors(["#08519c", "#*82bd", "#6baed6","#FFCC00","#FF9900","#FF0000"]).mode(["offset"]));//.colors(["#08519c", "#*82bd", "#6baed6","#F1B8AB","#F27145","#DD0505"]).mode(["offset"]));//.colors(["#08519c", "#*82bd", "#6baed6","#bae4b3","#74c476","#006d2c","#f20510","#da8e92" ]));
+
+d3.select("body").selectAll(".horizon3")
+    .data(matrics_99th)
+  .enter().insert("div", ".bottom")
+    .attr("class", "horizon").call(horizon3.extent([-400, 60]).colors(["#08519c", "#*82bd", "#6baed6","#FFCC00","#FF9900","#FF0000"]).mode(["offset"]));//.colors(["#08519c", "#*82bd", "#6baed6","#F1B8AB","#F27145","#DD0505"]).mode(["offset"]));//.colors(["#08519c", "#*82bd", "#6baed6","#bae4b3","#74c476","#006d2c","#f20510","#da8e92" ]));
 
 d3.select("body").selectAll(".horizon2")
     .data(data_metrics)
@@ -101,7 +103,7 @@ d3.select("body").selectAll(".horizon2")
     .attr("class", "horizon").call(horizon2.extent([-80, 80]));
 
 context.on("focus", function(i) {
-  d3.selectAll(".value").style("right", i == null ? null : context.size() - 3 - i + "px");
+  d3.selectAll(".value").style("right", i == null ? null : context.size() - 1 - i + "px");
 });
 
 </script>
