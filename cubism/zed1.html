@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Individual Graph Generator</title>
+<style>
+ 
+@import url(style.css);
+ 
+</style>
+<body>
+<div id="ins" style="top: -23px; position: absolute;" >
+  Server: <input id="server" value="http://graphite1:8080"/> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+  Targets: <input id="pattern" value="stats.timer.*.*" size=50 />
+  Height: &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  <input id="height" value="40"size=30 />
+  <button onclick='go()'>Go</button>
+</div>
+<div id="example"></div>
+<script src="d3.v2.js"></script>
+<script src="cubism.v1.js"></script>
+<script>
+ 
+var go = function(){
+ 
+  d3.select("#example").selectAll(".horizon").remove();
+  var server = document.getElementById('server').value;
+  var pattern = document.getElementById('pattern').value;
+  var heightvar = document.getElementById('height').value;
+  var context = cubism.context()
+      .step(1e4)
+      .size(1440);
+  var graphite = context.graphite(server);
+  var dyn_gmetrics = [];
+//  var result = dyn_gmetrics.length;
+ // var dyn_gmetrics1;
+  graphite.find(pattern, function(error, results){
+    for(var i in results){
+//      for(var i in result){
+      dyn_gmetrics[i] = graphite.metric(results[i]);
+    }
+    d3.select("#example").selectAll(".horizon")
+      .data(dyn_gmetrics)
+      .enter().insert("div", ".bottom")
+      .attr("class", "horizon")
+      .call(context.horizon().extent([-10, 100]).height([heightvar]));
+  });
+ 
+  d3.select("#example").selectAll(".axis")
+      .data(["top", "bottom"])
+      .enter().append("div")
+      .attr("class", function(d) { return d + " axis"; })
+      .each(function(d) { d3.select(this).call(context.axis().ticks(12).orient(d)); });
+ 
+  d3.select("#example").append("div")
+      .attr("class", "rule")
+      .call(context.rule());
+ 
+  context.on("focus", function(i) {
+    d3.selectAll(".value").style("right", i == null ? null : context.size() - i + "px");
+  });
+};  
+ 
+go();
+ 
+</script>

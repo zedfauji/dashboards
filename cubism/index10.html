@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+body {
+  font: 10px sans-serif;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.area {
+  fill: steelblue;
+}
+
+</style>
+<body>
+<script src="http://d3js.org/d3.v3.js"></script>
+<script src="cubism.v1.js"></script>
+<script>
+
+var context = cubism.context()
+    .serverDelay(15) // allow 15 seconds of collection lag
+        .size(800)
+//    .clientDelay(1)
+    .step(1 * 60 * 1000) // fifteen seconds per value
+    .size(2880); // fetch 1440 values (720p)
+var graphite = context.graphite("http://graphite1.pv.sv.nextag.com:8080");
+
+
+var matrics_median = [
+graphite.metric("keepLastValue(averageSeries(keepLastValue(stats.timers.Clients.Services.PS.CN.lu*.tag.GetById.median)))").alias("SVS-Tag read latency - median").summarize("avg"),
+graphite.metric("keepLastValue(stats.timers.Clients.Services.PS.AT.atlu*.tag.GetById.median)").alias("ATL-Tag read latency - median").summarize("avg"),
+graphite.metric("keepLastValue(stats.timers.Clients.Services.PS.SD.sdlu*.tag.GetById.median)").alias("SDX-Tag read latency - median").summarize("avg"),
+];
+
+var margin = {top: 20, right: 20, bottom: 30, left: 50},
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+var parseDate = d3.time.format("%d-%b-%y").parse;
+
+var x = d3.time.scale()
+    .range([0, width]);
+
+var y = d3.scale.linear()
+    .range([height, 0]);
+
+var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient("bottom");
+
+var yAxis = d3.svg.axis()
+    .scale(y)
+    .orient("left");
+
+var area = d3.svg.area()
+    .x(function(d) { return x(d.date); })
+    .y0(height)
+    .y1(function(d) { return y(d.close); });
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+d3.tsv("matrics_median", function(error, data) {
+  data.forEach(function(d) {
+    d.date = parseDate(d.date);
+    d.close = +d.close;
+  });
+
+  d3.select("body").selectAll(".axis")
+    .data(["top", "bottom"])
+  .enter().append("div").attr("class", "fluid-row")
+    .attr("class", function(d) { return d + " axis"; })
+    .each(function(d) { d3.select(this).call(context.axis().ticks(36).orient(d)); });
+  x.domain(d3.extent(data, function(d) { return d.date; }));
+  y.domain([0, d3.max(data, function(d) { return d.close; })]);
+
+  svg.append("path")
+      .datum(data)
+      .attr("class", "area")
+      .attr("d", area);
+
+  svg.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis);
+
+  svg.append("g")
+      .attr("class", "y axis")
+      .call(yAxis)
+    .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", ".71em")
+      .style("text-anchor", "end")
+      .text("Price ($)");
+});
+
+context.on("focus", function(i) {
+  d3.selectAll(".value").style("right", i == null ? null : context.size() - 3 - i + "px");
+});
+
+</script>

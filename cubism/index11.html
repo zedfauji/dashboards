@@ -1,0 +1,113 @@
+<html>
+  <head>
+    <title>Horizon Graph</title>
+    <script type="text/javascript" src="https://github.com/jmcampanini/gexf4js/blob/master/protovis-r3.2.js"></script>
+    <script type="text/javascript" src="https://github.com/jmcampanini/gexf4js/blob/master/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="https://gist.github.com/cherenkov/331873.js"></script>
+    <script type="text/javascript" src="cubism.v1.js"></script>
+    <link type="text/css" rel="stylesheet" href="ex.css"/>
+    <style type="text/css">
+
+#fig {
+  width: 500px;
+  height: 115px;
+}
+
+#slider {
+  width: 120px;
+  display: inline-block;
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+#bands {
+  display: inline-block;
+  width: 10px;
+  text-align: right;
+}
+
+.ui-slider {
+  font-size: 10px;
+  width: 300px;
+  margin-top: 5px;
+}
+
+.ui-state-focus {
+  outline: none;
+}
+
+    </style>
+  </head>
+  <body><div id="center"><div id="fig">
+    <div style="width:500px;">
+      <b>Bands:</b><span id="slider"></span><span id="bands">2</span>
+      <span style="float:right;"><b>Negative:</b>
+      <input type="radio" id="mirror" name="mode" value="mirror" checked/><label
+      for="mirror">mirror</label>
+      <input type="radio" id="offset" name="mode" value="offset"/><label
+      for="offset">offset</label></span>
+    </div>
+    <script type="text/javascript+protovis">
+
+
+	
+	var context = cubism.context()
+    .serverDelay(15) // allow 15 seconds of collection lag
+        .size(800)
+//    .clientDelay(1)
+    .step(1 * 60 * 1000) // fifteen seconds per value
+    .size(2880); // fetch 1440 values (720p)
+var graphite = context.graphite("http://graphite1.pv.sv.nextag.com:8080");
+
+var matrics_median = [
+graphite.metric("keepLastValue(averageSeries(keepLastValue(stats.timers.Clients.Services.PS.CN.lu*.tag.GetById.median)))").alias("SVS-Tag read latency - median").summarize("avg"),
+graphite.metric("keepLastValue(stats.timers.Clients.Services.PS.AT.atlu*.tag.GetById.median)").alias("ATL-Tag read latency - median").summarize("avg"),
+graphite.metric("keepLastValue(stats.timers.Clients.Services.PS.SD.sdlu*.tag.GetById.median)").alias("SDX-Tag read latency - median").summarize("avg"),
+];
+
+/* Offset so that positive is above-average and negative is below-average. */
+var avg = pv.mean(matrics_median, function(d) d.rate);
+data.map(function(d) d.rate -= avg);
+
+var w = 500,
+    h = 84,
+    bands = 2,
+    mode = "mirror",
+    fx = function(d) d.date,
+    fy = function(d) d.rate,
+    m = Math.max(pv.max(matrics_median, fy), -pv.min(matrics_median, fy)),
+    x = pv.Scale.linear(matrics_median, fx).range(0, w).by(fx),
+    y = pv.Scale.linear(-m, m).range(-h, h).by(fy);
+
+var vis = new pv.Panel()
+    .top(10)
+    .width(w)
+    .height(h);
+
+vis.add(pv.Layout.Horizon)
+    .bands(function() bands)
+    .mode(function() mode)
+    .height(function() h / bands)
+    .bottom(0)
+  .band.add(pv.Area)
+    .data(matrics_median)
+    .left(x)
+    .height(y);
+
+vis.render();
+
+$(slider).slider({
+    min: 1, max: 5, value: 2, slide: function(e, ui) {
+      $("#bands").html(bands = ui.value);
+      vis.render();
+    }
+});
+
+$([mirror, offset]).change(function() {
+  mode = this.value;
+  vis.render();
+});
+
+    </script>
+  </div></div></body>
+</html>
