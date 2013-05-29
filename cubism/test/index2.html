@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Pure Javascript, HTML 5 &amp; CSS3 Tabs</title>
+<link href="style1.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+<div id="wrapper">
+  <div id="tabContainer">
+    <div class="tabs">
+      <ul>
+        <li id="tabHeader_1">Tag</li>
+        <li id="tabHeader_2">Product</li>
+        <li id="tabHeader_3">Page 3</li>
+      </ul>
+    </div>
+    <div class="tabscontent">
+      <div class="tabpage" id="tabpage_1">
+        <h2>Tag</h2>
+        <p>Pellentesque habitant morbi tristique senectus...</p>
+		<title>Services Dashboard-Tag-FrontEnd</title>
+<p><b> Developed By:- Girish Dudhwal #Tech Ops &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<font color = "FFCC00">Normal Value&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color = "FF9900">Alert Value&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color = "FF0000">Warning Value&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font></b></p>
+<p><i> The More quieter you are , More you be able to hear </i></p>
+
+<style>
+
+@import url(bootstrap.css);
+@import url(style.css);
+
+</style>
+<body>
+   <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        Services Dashboard-Tag
+      </div>
+    </div>
+
+
+<script src="d3.v2.js"></script>
+<script src="cubism.v1.js"></script>
+<script>
+var context = cubism.context()
+    .serverDelay(10) // allow 15 seconds of collection lag
+//    .clientDelay(10)
+    .step(1 * 60 * 1000) // fifteen seconds per value
+    .size(1440); // fetch 1440 values (720p)
+var graphite = context.graphite("http://graphite1.pv.sv.nextag.com:8080");
+var matrics_median = [
+graphite.metric("movingAverage(averageSeries(transformNull(stats.timers.Clients.Services.PS.CN.lu*.tag.GetById.median,0)),10)").alias("SVS-Tag read latency - median").summarize("avg"),
+graphite.metric("movingAverage(averageSeries(keepLastValue(stats.timers.Clients.Services.PS.AT.atlu*.tag.GetById.median)),10)").alias("ATL-Tag read latency - median").summarize("avg"),
+graphite.metric("movingAverage(averageSeries(keepLastValue(stats.timers.Clients.Services.PS.SD.sdlu*.tag.GetById.median)),10)").alias("SDX-Tag read latency - median").summarize("avg"),
+];
+
+var matrics_95th = [
+graphite.metric("movingAverage(averageSeries(transformNull(stats.timers.Clients.Services.PS.CN.lu*.tag.GetById.upper_95,0)),10)").alias("SVS-Tag read latency - mean 95th").summarize("avg"),
+graphite.metric("movingAverage(averageSeries(keepLastValue(stats.timers.Clients.Services.PS.AT.atlu*.tag.GetById.upper_95)),10)").alias("ATL-Tag read latency - mean 95th").summarize("avg"),
+graphite.metric("movingAverage(averageSeries(keepLastValue(stats.timers.Clients.Services.PS.SD.sdlu*.tag.GetById.upper_95)),10)").alias("SDX-Tag read latency - mean 95th").summarize("avg"),
+
+];
+
+var matrics_99th = [
+
+graphite.metric("movingAverage(averageSeries(keepLastValue(stats.timers.Clients.Services.PS.CN.lu*.tag.GetById.upper_99)),10)").alias("SVS-Tag read latency - mean 99th").summarize("avg"),
+graphite.metric("movingAverage(averageSeries(keepLastValue(stats.timers.Clients.Services.PS.AT.atlu*.tag.GetById.upper_99)),10)").alias("ATL-Tag read latency - mean 99th").summarize("avg"),
+graphite.metric("movingAverage(averageSeries(keepLastValue(stats.timers.Clients.Services.PS.SD.sdlu*.tag.GetById.upper_99)),10)").alias("SDX-Tag read latency - mean 99th").summarize("avg"),
+
+];
+
+var matrics_sum = [
+graphite.metric("movingAverage(averageSeries(keepLastValue(stats_counts.Clients.Services.PS.CN.lu*.tag.GetById*)),10)").alias("SVS-Tag Cache Misses - sum").summarize("sum"),
+graphite.metric("movingAverage(averageSeries(keepLastValue(stats_counts.Clients.Services.PS.AT.atlu*.tag.GetById*)),10)").alias("ATL-Tag Cache Misses - sum").summarize("sum"),
+ graphite.metric("movingAverage(averageSeries(keepLastValue(stats_counts.Clients.Services.PS.SD.sdlu*.tag.GetById*,0)),10)").alias("SDX-Tag Cache Misses - sum"),
+];
+
+
+
+var horizon = context.horizon().height([70])
+var horizon1 = context.horizon().height([70])
+var horizon4 = context.horizon().height([70])
+var horizon3 = context.horizon().height([70])
+var horizon2 = context.horizon().colors(["#ddic77", "#c994c7", "#e7eief","#efedf5", "#bcbddc", "#756bb1" ]);
+
+d3.select("body").selectAll(".axis")
+    .data(["top", "bottom"])
+  .enter().append("div").attr("class", "fluid-row")
+    .attr("class", function(d) { return d + " axis"; })
+    .each(function(d) { d3.select(this).call(context.axis().ticks(24).orient(d)); });
+
+d3.select("body").append("div")
+    .attr("class", "rule")
+    .call(context.rule());
+
+d3.select("body").selectAll(".horizon")
+    .data(matrics_median)
+  .enter().insert("div", ".bottom")
+    .attr("class", "horizon").call(horizon.extent([-10, 60]).colors(["#08519c", "#*82bd", "#6baed6","#FFCC00","#FF9900","#FF0000"]).mode(["offset"]));//.colors(["#08519c", "#*82bd", "#6baed6","#F1B8AB","#F27145","#DD0505"]).mode(["offset"]));//.colors(["#08519c", "#*82bd", "#6baed6","#F28C6A","#F27145","#F1460D"]).mode(["offset"]));//colors(["#08519c", "#*82bd", "#6baed6","#bae4b3","#74c476","#006d2c","#f20510","#da8e92" ]).mode(["offset"]));
+
+d3.select("body").selectAll(".horizon1")
+    .data(matrics_95th)
+  .enter().insert("div", ".bottom")
+    .attr("class", "horizon").call(horizon1.extent([-200, 60]).colors(["#08519c", "#*82bd", "#6baed6","#FFCC00","#FF9900","#FF0000"]).mode(["offset"]));//.colors(["#08519c", "#*82bd", "#6baed6","#bae4b3","#74c476","#006d2c","#f20510","#da8e92" ]).mode(["mirror"]));
+
+d3.select("body").selectAll(".horizon4")
+    .data(matrics_sum)
+  .enter().insert("div", ".bottom")
+    .attr("class", "horizon").call(horizon4.extent([-10, 60]).colors(["#08519c", "#*82bd", "#6baed6","#FFCC00","#FF9900","#FF0000"]).mode(["offset"]));//.colors(["#08519c", "#*82bd", "#6baed6","#F1B8AB","#F27145","#DD0505"]).mode(["offset"]));//.colors(["#08519c", "#*82bd", "#6baed6","#bae4b3","#74c476","#006d2c","#f20510","#da8e92" ]));
+
+d3.select("body").selectAll(".horizon3")
+    .data(matrics_99th)
+  .enter().insert("div", ".bottom")
+    .attr("class", "horizon").call(horizon3.extent([-400, 60]).colors(["#08519c", "#*82bd", "#6baed6","#FFCC00","#FF9900","#FF0000"]).mode(["offset"]));//.colors(["#08519c", "#*82bd", "#6baed6","#F1B8AB","#F27145","#DD0505"]).mode(["offset"]));//.colors(["#08519c", "#*82bd", "#6baed6","#bae4b3","#74c476","#006d2c","#f20510","#da8e92" ]));
+
+d3.select("body").selectAll(".horizon2")
+    .data(data_metrics)
+  .enter().insert("div", ".bottom")
+    .attr("class", "horizon").call(horizon2.extent([-80, 80]));
+
+context.on("focus", function(i) {
+  d3.selectAll(".value").style("right", i == null ? null : context.size() - 1 - i + "px");
+});
+
+</script>
+
+      </div>
+      <div class="tabpage" id="tabpage_2">
+        <h2>Product</h2>
+        <p>Pellentesque habitant morbi tristique senectus...</p>
+		<title>Services Dashboard-Product-FrontEnd</title>
+<p><b> Developed By:- Girish Dudhwal #Tech Ops &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;*<font color = "FFCC00">Normal Value&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color = "FF9900">Alert Value&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font><font color = "FF0000">Warning Value&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</font></b></p>
+<p><i> The More quieter you are , More you be able to hear </i></p>
+
+<style>
+
+@import url(bootstrap.css);
+@import url(style.css);
+
+
+
+</style>
+<body>
+   <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        Services Dashboard-Tag
+      </div>
+    </div>
+
+<script src="d3.v2.js"></script>
+<script src="cubism.v1.js"></script>
+<script>
+
+var context = cubism.context()
+    .serverDelay(10) // allow 15 seconds of collection lag
+//    .clientDelay(10)
+    .step(1 * 60 * 1000) // fifteen seconds per value
+    .size(1440); // fetch 1440 values (720p)
+var graphite = context.graphite("http://graphite1.pv.sv.nextag.com:8080");
+var matrics_median = [
+graphite.metric("movingAverage(averageSeries(transformNull(stats.timers.Clients.Services.PS.CN.lu*.product.GetById.median,0)),10)").alias("SVS-Product read latency - median").summarize("avg"),
+graphite.metric("movingAverage(averageSeries(keepLastValue(stats.timers.Clients.Services.PS.AT.atlu*.product.GetById.median)),10)").alias("ATL-Product read latency - median").summarize("avg"),
+graphite.metric("movingAverage(averageSeries(keepLastValue(stats.timers.Clients.Services.PS.SD.sdlu*.product.GetById.median)),10)").alias("SDX-Product read latency - median").summarize("avg"),
+];
+
+var matrics_95th = [
+graphite.metric("movingAverage(averageSeries(transformNull(stats.timers.Clients.Services.PS.CN.lu*.product.GetById.upper_95,0)),10)").alias("SVS-Product read latency - mean 95th").summarize("avg"),
+graphite.metric("movingAverage(averageSeries(keepLastValue(stats.timers.Clients.Services.PS.AT.atlu*.product.GetById.upper_95)),10)").alias("ATL-Product read latency - mean 95th").summarize("avg"),
+graphite.metric("movingAverage(averageSeries(keepLastValue(stats.timers.Clients.Services.PS.SD.sdlu*.product.GetById.upper_95)),10)").alias("SDX-Product read latency - mean 95th").summarize("avg"),
+
+];
+
+var matrics_99th = [
+
+graphite.metric("movingAverage(averageSeries(keepLastValue(stats.timers.Clients.Services.PS.CN.lu*.product.GetById.upper_99)),10)").alias("SVS-Product read latency - mean 99th").summarize("avg"),
+graphite.metric("movingAverage(averageSeries(keepLastValue(stats.timers.Clients.Services.PS.AT.atlu*.product.GetById.upper_99)),10)").alias("ATL-Product read latency - mean 99th").summarize("avg"),
+graphite.metric("movingAverage(averageSeries(keepLastValue(stats.timers.Clients.Services.PS.SD.sdlu*.product.GetById.upper_99)),10)").alias("SDX-Product read latency - mean 99th").summarize("avg"),
+
+];
+
+var matrics_sum = [
+graphite.metric("movingAverage(averageSeries(keepLastValue(stats_counts.Clients.Services.PS.CN.lu*.product.GetById*)),10)").alias("SVS-Product Cache Misses - sum").summarize("sum"),
+graphite.metric("movingAverage(averageSeries(keepLastValue(stats_counts.Clients.Services.PS.AT.atlu*.product.GetById*)),10)").alias("ATL-Product Cache Misses - sum").summarize("sum"),
+ graphite.metric("movingAverage(averageSeries(keepLastValue(stats_counts.Clients.Services.PS.SD.sdlu*.product.GetById*,0)),10)").alias("SDX-Product Cache Misses - sum"),
+];
+
+
+
+var horizon = context.horizon().height([70])
+var horizon1 = context.horizon().height([70])
+var horizon4 = context.horizon().height([70])
+var horizon3 = context.horizon().height([70])
+var horizon2 = context.horizon().colors(["#ddic77", "#c994c7", "#e7eief","#efedf5", "#bcbddc", "#756bb1" ]);
+
+d3.select("body").selectAll(".axis")
+    .data(["top", "bottom"])
+  .enter().append("div").attr("class", "fluid-row")
+    .attr("class", function(d) { return d + " axis"; })
+    .each(function(d) { d3.select(this).call(context.axis().ticks(24).orient(d)); });
+
+d3.select("body").append("div")
+    .attr("class", "rule")
+    .call(context.rule());
+
+d3.select("body").selectAll(".horizon")
+    .data(matrics_median)
+  .enter().insert("div", ".bottom")
+    .attr("class", "horizon").call(horizon.extent([-10, 60]).colors(["#08519c", "#*82bd", "#6baed6","#FFCC00","#FF9900","#FF0000"]).mode(["offset"]));//.colors(["#08519c", "#*82bd", "#6baed6","#F1B8AB","#F27145","#DD0505"]).mode(["offset"]));//.colors(["#08519c", "#*82bd", "#6baed6","#F28C6A","#F27145","#F1460D"]).mode(["offset"]));//colors(["#08519c", "#*82bd", "#6baed6","#bae4b3","#74c476","#006d2c","#f20510","#da8e92" ]).mode(["offset"]));
+
+d3.select("body").selectAll(".horizon1")
+    .data(matrics_95th)
+  .enter().insert("div", ".bottom")
+    .attr("class", "horizon").call(horizon1.extent([-200, 60]).colors(["#08519c", "#*82bd", "#6baed6","#FFCC00","#FF9900","#FF0000"]).mode(["offset"]));//.colors(["#08519c", "#*82bd", "#6baed6","#bae4b3","#74c476","#006d2c","#f20510","#da8e92" ]).mode(["mirror"]));
+
+d3.select("body").selectAll(".horizon4")
+    .data(matrics_sum)
+  .enter().insert("div", ".bottom")
+    .attr("class", "horizon").call(horizon4.extent([-10, 10]).colors(["#08519c", "#*82bd", "#6baed6","#FFCC00","#FF9900","#FF0000"]).mode(["offset"]));//.colors(["#08519c", "#*82bd", "#6baed6","#F1B8AB","#F27145","#DD0505"]).mode(["offset"]));//.colors(["#08519c", "#*82bd", "#6baed6","#bae4b3","#74c476","#006d2c","#f20510","#da8e92" ]));
+
+d3.select("body").selectAll(".horizon3")
+    .data(matrics_99th)
+  .enter().insert("div", ".bottom")
+    .attr("class", "horizon").call(horizon3.extent([-400, 60]).colors(["#08519c", "#*82bd", "#6baed6","#FFCC00","#FF9900","#FF0000"]).mode(["offset"]));//.colors(["#08519c", "#*82bd", "#6baed6","#F1B8AB","#F27145","#DD0505"]).mode(["offset"]));//.colors(["#08519c", "#*82bd", "#6baed6","#bae4b3","#74c476","#006d2c","#f20510","#da8e92" ]));
+
+d3.select("body").selectAll(".horizon2")
+    .data(data_metrics)
+  .enter().insert("div", ".bottom")
+    .attr("class", "horizon").call(horizon2.extent([-80, 80]));
+
+context.on("focus", function(i) {
+  d3.selectAll(".value").style("right", i == null ? null : context.size() - 1 - i + "px");
+});
+
+</script>
+      </div>
+      <div class="tabpage" id="tabpage_3">
+        <h2>Page 3</h2>
+        <p>Pellentesque habitant morbi tristique senectus...</p>
+      </div>
+    </div>
+  </div>
+<script src="tabs.js"></script>
+</body>
+</html>
+
